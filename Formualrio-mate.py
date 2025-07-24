@@ -36,14 +36,15 @@ with st.form("formulario_ansiedad"):
             respuestas[item] = st.selectbox(f"{item}. {texto}", options=list(range(24)))
         elif item == "Q37":
             respuestas[item] = st.number_input(f"{item}. {texto}", step=1, format="%d")
-        elif item in ["Q41", "Q42"]:
-            tipo_dato = st.radio(f"{item}. {texto} — ¿Tipo de dato?", ["Número", "Letra"], key=item+"_tipo")
-            if tipo_dato == "Número":
-                respuestas[item] = st.number_input(f"{item} (0 a 20)", min_value=0, max_value=20, step=1, key=item+"_num")
-            else:
-                respuestas[item] = st.selectbox(f"{item} (Letra)", options=["A", "B", "C", "D", "F"], key=item+"_letra")
-        else:
-            respuestas[item] = st.text_input(f"{item}. {texto}")
+       # Q41 y Q42 - Target: entrada libre (número o letra mayúscula)
+    for item in ["Q41", "Q42"]:
+        texto = df_preguntas[df_preguntas["ítem"] == item]["Pregunta"].values[0]
+        entrada = st.text_input(f"{item}. {texto} (Escribe un número entero o una letra mayúscula)", key=item)
+
+        if entrada and not entrada.strip().isdigit() and not (entrada.strip().isalpha() and entrada.strip().isupper()):
+            st.warning(f"{item}: Debes escribir solo un número o una letra mayúscula.")
+        
+        respuestas[item] = entrada.strip()
 
     # Botón para enviar
     enviado = st.form_submit_button("Enviar respuestas")
