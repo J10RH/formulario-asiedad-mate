@@ -10,44 +10,42 @@ st.title("Formulario de Cuestionario de Ansiedad Matemática")
 
 with st.form("formulario_ansiedad"):
     respuestas = {}
-    
-    # Preguntas Q1 a Q31: escala 1-5
+
+    # Preguntas Q1 a Q31: opciones de 1 a 5
     for i in range(31):
         row = df_preguntas.iloc[i]
-        pregunta = row["Pregunta"]
         codigo = row["ítem"]
-        respuesta = st.radio(f"{codigo}. {pregunta}", options=[1, 2, 3, 4, 5], key=codigo)
-        respuestas[codigo] = respuesta
+        texto = row["Pregunta"]
+        respuestas[codigo] = st.radio(f"{codigo}. {texto}", options=[1, 2, 3, 4, 5], key=codigo)
 
-    # Q32 - Edad (texto numérico)
+    # Q32 - Edad
     respuestas["Q32"] = st.number_input("Q32. ¿Cuál es tu edad?", min_value=5, max_value=100, step=1)
 
-    # Q33 - Sexo (M o F)
-    respuestas["Q33"] = st.selectbox("Q33. Sexo", options=["M", "F"])
+    # Q33 - Género (M o F)
+    texto_q33 = df_preguntas[df_preguntas["ítem"] == "Q33"]["Pregunta"].values[0]
+    respuestas["Q33"] = st.selectbox(f"Q33. {texto_q33}", options=["M", "F"])
 
-    # Q34 - No está especificada, opcionalmente se puede omitir o definir
+    # Q34 a Q42 - Usar textos del archivo
+    for i in range(33, 42):
+        item = f"Q{i+1}"
+        texto = df_preguntas[df_preguntas["ítem"] == item]["Pregunta"].values[0]
 
-    # Q35 - Palabra de máx 9 letras
-    respuestas["Q35"] = st.text_input("Q35. Escribe una palabra (máx. 9 letras)", max_chars=9)
-
-    # Q36 - Elegir hora (0 a 23 h)
-    respuestas["Q36"] = st.selectbox("Q36. Selecciona una hora del día", options=list(range(24)))
-
-    # Q37 - Número entero
-    respuestas["Q37"] = st.number_input("Q37. Escribe un número entero", step=1, format="%d")
-
-    # Q38 a Q40 - Palabras máx 9 letras
-    for q in ["Q38", "Q39", "Q40"]:
-        respuestas[q] = st.text_input(f"{q}. Escribe una palabra (máx. 9 letras)", max_chars=9)
-
-    # Q41 y Q42 - Elegir entre número (0 a 20) o letra A/B/C/D/F
-    for q in ["Q41", "Q42"]:
-        tipo_dato = st.radio(f"{q}. ¿Qué tipo de dato deseas ingresar?", ["Número", "Letra"], key=q+"_tipo")
-        if tipo_dato == "Número":
-            respuestas[q] = st.number_input(f"{q} (Número entre 0 y 20)", min_value=0, max_value=20, step=1, key=q+"_num")
+        if item == "Q35" or item in ["Q38", "Q39", "Q40"]:
+            respuestas[item] = st.text_input(f"{item}. {texto}", max_chars=9)
+        elif item == "Q36":
+            respuestas[item] = st.selectbox(f"{item}. {texto}", options=list(range(24)))
+        elif item == "Q37":
+            respuestas[item] = st.number_input(f"{item}. {texto}", step=1, format="%d")
+        elif item in ["Q41", "Q42"]:
+            tipo_dato = st.radio(f"{item}. {texto} — ¿Tipo de dato?", ["Número", "Letra"], key=item+"_tipo")
+            if tipo_dato == "Número":
+                respuestas[item] = st.number_input(f"{item} (0 a 20)", min_value=0, max_value=20, step=1, key=item+"_num")
+            else:
+                respuestas[item] = st.selectbox(f"{item} (Letra)", options=["A", "B", "C", "D", "F"], key=item+"_letra")
         else:
-            respuestas[q] = st.selectbox(f"{q} (Letra)", options=["A", "B", "C", "D", "F"], key=q+"_letra")
+            respuestas[item] = st.text_input(f"{item}. {texto}")
 
+    # Botón para enviar
     enviado = st.form_submit_button("Enviar respuestas")
 
 # Guardar respuestas si se envió el formulario
